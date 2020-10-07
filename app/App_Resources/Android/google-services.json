@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "120854016900",
+    "firebase_url": "https://fpx-pant.firebaseio.com",
+    "project_id": "fpx-pant",
+    "storage_bucket": "fpx-pant.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120854016900:android:e662f4a678fb09f05f23d1",
+        "android_client_info": {
+          "package_name": "org.nativescript.application"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "120854016900-qv1v2nj28dioc4s2phu3gjg18u9cbev1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIdeo2ZUiQnxEul_F5O--qKQGEpsN0Rsw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "120854016900-qv1v2nj28dioc4s2phu3gjg18u9cbev1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

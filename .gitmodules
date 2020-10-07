@@ -1,0 +1,3 @@
+[submodule "nativescript-mapbox"]
+	path = nativescript-mapbox
+	url = git@github.com:Future-Position-X/nativescript-mapbox.git
