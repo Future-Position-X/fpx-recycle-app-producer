@@ -28,7 +28,7 @@
                         <Label text="Markera den pant som du är intresserad av att hämta" textWrap="true" fontWeight="bold" fontSize="18" class="titleColor" marginTop="22" />
 
                         <StackLayout marginTop="10">
-                            <Label v-for="(item, index) in bookings" :key="item.id" marginLeft="30" marginTop="10">{{index + 1}}. Senast kl {{item.start}}</Label>
+                            <Label v-for="(item, index) in bookings" :key="item.id" marginLeft="30" marginTop="10">{{index + 1}}. Senast: kl {{item.properties.start}}</Label>
                         </StackLayout>
                     </StackLayout>
                 </ScrollView>
@@ -40,26 +40,32 @@
 
 <script>
   import date from 'date-and-time';
+  import collection from '../services/collection'
+  import session from '../services/session'
 
   export default {
     data() {
       return {
         map: null,
-        bookings: [
-            {
-                "start": date.format(new Date(), "HH:mm dddd")
-            },
-            {
-                "start": date.format(new Date(), "HH:mm dddd")
-            },
-            {
-                "start": date.format(new Date(), "HH:mm dddd")
-            }
-        ]
+        bookings: []
       }
     },
     methods: {
-        onPageLoaded() {
+        async onPageLoaded() {
+            const center = this.$store.state.selectedCoordinates;
+            console.log(center);
+            await session.create("recycleconsumer@gia.fpx.se", "test");
+            this.bookings = await collection.fetchItemsByNameWithin("fpx_recycle_consumer", {x: center.lng, y: center.lat}, 50000);
+            for (let booking of this.bookings) {
+                booking.properties.start = date.format(new Date(booking.properties.start), "HH:mm dddd");
+
+                this.map.addMarkers([{
+                    lat: booking.geometry.coordinates[1],
+                    lng: booking.geometry.coordinates[0],
+                    title: booking.properties.name
+                }]);
+            }
+            console.log(this.bookings);
         },
         async onMapReady(args) {
             this.map = args.map;
