@@ -18,8 +18,8 @@ Vue.registerElement('Carousel', () => require('nativescript-carousel').Carousel)
 Vue.registerElement('CarouselItem', () => require('nativescript-carousel').CarouselItem);
 Vue.registerElement("DropDown", () => require("nativescript-drop-down/drop-down").DropDown);
 Vue.registerElement("Mapbox", () => require("nativescript-mapbox").MapboxView)
-//Vue.use(RadListView);
-Vue.registerElement('RadListView', () => require('nativescript-ui-listview').RadListView);
+
+Vue.use(RadListView);
 
 new Vue({
   store,

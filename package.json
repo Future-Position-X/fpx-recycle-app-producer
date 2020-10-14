@@ -17,6 +17,7 @@
   "dependencies": {
     "@vue/devtools": "^5.3.3",
     "date-and-time": "^0.14.1",
+    "nativescript": "^7.0.10",
     "nativescript-carousel": "^6.1.1",
     "nativescript-drop-down": "^5.0.6",
     "nativescript-mapbox": "file:./nativescript-mapbox/publish/dist/package",
