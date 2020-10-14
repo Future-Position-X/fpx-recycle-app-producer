@@ -1,14 +1,15 @@
 <template>
   <Page @loaded="onPageLoaded" actionBarHidden="true" background="#f2f2f2">
     <GridLayout>
-      <GridLayout rows="2*,*" padding="0 20">
+      <GridLayout rows="2*,2*" padding="0 20">
           <StackLayout row="1">
             <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor"/>
             <Label text="Markera den pant som du är intresserad av att hämta" textWrap="true" fontWeight="bold"
                    fontSize="16" class="titleColor" marginTop="12"/>
             <RadListView ref="listView"
                          for="(item, index) in bookings"
-                          @itemTap="onItemTap">
+                          @itemTap="onItemTap"
+                          height="200">
               <v-template>
                 <StackLayout orientation="vertical" padding="10" borderBottomWidth="1" borderBottomColor="black" :backgroundColor="item.selected ? '#eeeeee':'white'">
                   <Label class="bodyTextColor" textWrap="true" fontSize="18">
@@ -20,6 +21,7 @@
                 </StackLayout>
               </v-template>
             </RadListView>
+            <Button text="Hämta markerad pant" @onTap="onCollectTap" marginTop="30" textTransform="none" background="#1f2d40" color="white" borderRadius="40" width="80%" height="57" fontSize="21" class="bodyTextColor"/>
           </StackLayout>
         <Mapbox row="0"
                 ref="map"
@@ -81,8 +83,8 @@ export default {
           iconPath: "assets/images/icon_mapmark_onmap_unselected.png",
         };
         this.markers.push(marker);
-        this.map.addMarkers([marker]);
       }
+      this.map.addMarkers(this.markers);
       this.bookings = bookings
     },
     async onMapReady(args) {
@@ -113,8 +115,12 @@ export default {
       } else {
         marker.iconPath = "assets/images/icon_mapmark_onmap_unselected.png"
       }
+      this.map.removeMarkers([marker.id]);
       this.map.addMarkers([marker]);
     },
+    onCollectTap() {
+        
+    }
   }
 }
 </script>
