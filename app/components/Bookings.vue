@@ -27,9 +27,19 @@
                         <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor" />
                         <Label text="Markera den pant som du är intresserad av att hämta" textWrap="true" fontWeight="bold" fontSize="18" class="titleColor" marginTop="22" />
 
-                        <StackLayout marginTop="10">
+                        <!--<StackLayout marginTop="10">
                             <Label v-for="(item, index) in bookings" :key="item.id" marginLeft="30" marginTop="10">{{index + 1}}. Senast: kl {{item.properties.start}}</Label>
-                        </StackLayout>
+                        </StackLayout>-->
+
+                        <RadListView marginTop="10" ref="listView"
+                                for="(item, index) in bookings">
+                            <v-template>
+                            <StackLayout class="item" orientation="vertical">
+                                <Label :text="index" class="nameLabel"></Label>
+                                <Label :text="item.properties.start" class="descriptionLabel"></Label>
+                            </StackLayout>
+                            </v-template>
+                        </RadListView>
                     </StackLayout>
                 </ScrollView>
                 
