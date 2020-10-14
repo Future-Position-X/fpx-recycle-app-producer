@@ -15,7 +15,7 @@
                   <Label class="bodyTextColor" textWrap="true" fontSize="18">
                     <FormattedString>
                       <Span>{{index}}. </Span>
-                      <Span>{{item.properties.start}}</Span>
+                      <Span>{{item.properties.start_formated}}</Span>
                     </FormattedString>
                   </Label>
                 </StackLayout>
@@ -50,6 +50,7 @@
 </template>
 
 <script>
+/* global CONSUMERS_COLLECTION_NAME */
 import date from 'date-and-time';
 import collection from '../services/collection'
 import session from '../services/session'
@@ -67,21 +68,24 @@ export default {
       const center = this.$store.state.selectedCoordinates;
       console.log(center);
       await session.create("recycleconsumer@gia.fpx.se", "test");
-      const bookings = await collection.fetchItemsByNameWithin("fpx_recycle_consumer", {
+      this.booking_requests = await collection.fetchItemsByNameWithin(CONSUMERS_COLLECTION_NAME, {
         x: center.lng,
         y: center.lat
       }, 50000);
-      for (let booking of bookings) {
-        booking.selected = false;
-        booking.properties.start = date.format(new Date(booking.properties.start), "HH:mm dddd");
+      let bookings = [];
+      for (let booking of this.booking_requests) {
+        let newBooking = Object.create(booking)
+        newBooking.selected = false;
+        newBooking.properties.start_formated = date.format(new Date(newBooking.properties.start), "HH:mm dddd");
         let marker = {
-          id: booking.uuid,
-          lat: booking.geometry.coordinates[1],
-          lng: booking.geometry.coordinates[0],
-          title: booking.properties.name,
+          id: newBooking.uuid,
+          lat: newBooking.geometry.coordinates[1],
+          lng: newBooking.geometry.coordinates[0],
+          title: newBooking.properties.name,
           onTap: this.onMarkerTap,
           iconPath: "assets/images/icon_mapmark_onmap_unselected.png",
         };
+        bookings.push(newBooking);
         this.markers.push(marker);
       }
       this.map.addMarkers(this.markers);
@@ -118,8 +122,32 @@ export default {
       this.map.removeMarkers([marker.id]);
       this.map.addMarkers([marker]);
     },
-    onCollectTap() {
-        
+    async onCollectTap() {
+        const selectedBookingUuids = this.bookings.filter((b) => b.selected).map((b) => b.uuid);
+        const selectedBookings = this.booking_requests.filter((b) => selectedBookingUuids.includes(b.uuid))
+        selectedBookings.forEach((b) => {
+          b.properties.origin_uuid = b.uuid;
+          delete b.uuid;
+        });
+
+        console.log("fetching collections by name");
+        const collections = await collection.fetchCollections();
+        console.log("collections: " + JSON.stringify(collections));
+
+        let recycleCollection = collections.find(c => c.name === CONSUMERS_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
+        console.log("recycleCollection: " + JSON.stringify(recycleCollection));
+
+        if (recycleCollection == null) {
+          console.log("creating new collection");
+          recycleCollection = await collection.create(CONSUMERS_COLLECTION_NAME, false);
+          console.log("created collection: " + JSON.stringify(recycleCollection));
+        }
+
+        console.log("adding items to collection");
+        for(let item of selectedBookings) {
+          console.log("item:" + JSON.stringify(item))
+          await collection.createItem(recycleCollection.uuid, item);
+        }
     }
   }
 }
