@@ -7,7 +7,7 @@
             <Label text="Markera den pant som du är intresserad av att hämta" textWrap="true" fontWeight="bold"
                    fontSize="16" class="titleColor" marginTop="12"/>
             <RadListView ref="listView"
-                         for="(item, index) in bookings"
+                         for="(item, index) in displayBookings"
                           @itemTap="onItemTap"
                           height="200">
               <v-template>
@@ -15,7 +15,7 @@
                   <Label class="bodyTextColor" textWrap="true" fontSize="18">
                     <FormattedString>
                       <Span>{{index}}. </Span>
-                      <Span>{{item.properties.start_formated}}</Span>
+                      <Span>{{item.start_formated}}</Span>
                     </FormattedString>
                   </Label>
                 </StackLayout>
@@ -50,17 +50,20 @@
 </template>
 
 <script>
-/* global CONSUMERS_COLLECTION_NAME */
 import date from 'date-and-time';
 import collection from '../services/collection'
 import session from '../services/session'
+import config from "../config";
+import {Booking, Confirmation, Retriever} from "../models";
 
 export default {
   data() {
     return {
       map: null,
-      bookings: [],
+      displayBookings: [],
       markers: [],
+      booking_requests: [],
+      confirmations: [],
     }
   },
   methods: {
@@ -68,29 +71,32 @@ export default {
       const center = this.$store.state.selectedCoordinates;
       console.log(center);
       await session.create("recycleconsumer@gia.fpx.se", "test");
-      this.booking_requests = await collection.fetchItemsByNameWithin(CONSUMERS_COLLECTION_NAME, {
+      this.booking_requests = (await collection.fetchItemsByNameWithin(config.BOOKING_COLLECTION_NAME, {
         x: center.lng,
         y: center.lat
-      }, 50000);
+      }, 50000)).map((i) => Booking.from_item(i));
+      this.confirmations = await this.getConfirmations();
       let bookings = [];
-      for (let booking of this.booking_requests) {
-        let newBooking = Object.create(booking)
-        newBooking.selected = false;
-        newBooking.properties.start_formated = date.format(new Date(newBooking.properties.start), "HH:mm dddd");
+      for (const booking of this.booking_requests) {
+        let displayBooking = {}
+        displayBooking.uuid = booking.uuid;
+        displayBooking.selected = this.confirmations.map((c) => c.booking_uuid).includes(booking.uuid);
+        displayBooking.start_formated = date.format(new Date(booking.start), "HH:mm dddd");
         let marker = {
-          id: newBooking.uuid,
-          lat: newBooking.geometry.coordinates[1],
-          lng: newBooking.geometry.coordinates[0],
-          title: newBooking.properties.name,
+          id: booking.uuid,
+          lat: booking.coordinates[1],
+          lng: booking.coordinates[0],
+          title: booking.retriever_uuid,
           onTap: this.onMarkerTap,
-          iconPath: "assets/images/icon_mapmark_onmap_unselected.png",
+          iconPath: displayBooking.selected ? "assets/images/icon_mapmark_onmap_selected.png" : "assets/images/icon_mapmark_onmap_unselected.png",
         };
-        bookings.push(newBooking);
+        bookings.push(displayBooking);
         this.markers.push(marker);
       }
       this.map.addMarkers(this.markers);
-      this.bookings = bookings
+      this.displayBookings = bookings
     },
+
     async onMapReady(args) {
       this.map = args.map;
       const center = this.$store.state.selectedCoordinates;
@@ -104,14 +110,17 @@ export default {
         level: 16
       });
     },
-    onItemTap({ item }) {
-      this.toggleBooking(item.uuid)
+
+    onItemTap({ item: displayBooking }) {
+      this.toggleBooking(displayBooking.uuid)
     },
+
     onMarkerTap(marker) {
       this.toggleBooking(marker.id);
     },
+
     toggleBooking(id) {
-      const booking = this.bookings.find((b) => b.uuid === id);
+      const booking = this.displayBookings.find((b) => b.uuid === id);
       const marker = this.markers.find((m) => m.id === id);
       booking.selected = !booking.selected
       if(booking.selected) {
@@ -122,33 +131,52 @@ export default {
       this.map.removeMarkers([marker.id]);
       this.map.addMarkers([marker]);
     },
+
     async onCollectTap() {
-        const selectedBookingUuids = this.bookings.filter((b) => b.selected).map((b) => b.uuid);
+        let selectedBookingUuids = this.displayBookings.filter((b) => b.selected).map((b) => b.uuid);
+        selectedBookingUuids = selectedBookingUuids.filter((uuid) => !this.confirmations.map((c) => c.booking_uuid).includes(uuid));
         const selectedBookings = this.booking_requests.filter((b) => selectedBookingUuids.includes(b.uuid))
-        selectedBookings.forEach((b) => {
-          b.properties.origin_uuid = b.uuid;
-          delete b.uuid;
+        let confirmations = selectedBookings.map((b) =>  {
+          const confirmation = new Confirmation();
+          confirmation.coordinates = b.coordinates;
+          confirmation.booking_uuid = b.uuid;
+          return confirmation;
         });
 
         console.log("fetching collections by name");
         const collections = await collection.fetchCollections();
         console.log("collections: " + JSON.stringify(collections));
 
-        let recycleCollection = collections.find(c => c.name === CONSUMERS_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
-        console.log("recycleCollection: " + JSON.stringify(recycleCollection));
+        let confirmationCollection = collections.find(c => c.name === config.CONFIRMATION_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
+        console.log("confirmationCollection: " + JSON.stringify(confirmationCollection));
 
-        if (recycleCollection == null) {
+        if (confirmationCollection == null) {
           console.log("creating new collection");
-          recycleCollection = await collection.create(CONSUMERS_COLLECTION_NAME, false);
-          console.log("created collection: " + JSON.stringify(recycleCollection));
+          confirmationCollection = await collection.create(config.CONFIRMATION_COLLECTION_NAME, false);
+          console.log("created collection: " + JSON.stringify(confirmationCollection));
         }
 
-        console.log("adding items to collection");
-        for(let item of selectedBookings) {
-          console.log("item:" + JSON.stringify(item))
-          await collection.createItem(recycleCollection.uuid, item);
+        console.log("adding confirmations to collection");
+        for(let confirmation of confirmations) {
+          console.log("confirmation:" + JSON.stringify(confirmation.to_item()))
+          this.confirmations.push(confirmation);
+          await collection.createItem(confirmationCollection.uuid, confirmation.to_item());
         }
-    }
+    },
+
+    async getConfirmations() {
+      console.log("fetching collections by name");
+      const collections = await collection.fetchCollections();
+      console.log("collections: " + JSON.stringify(collections));
+
+      let confirmationCollection = collections.find(c => c.name === config.CONFIRMATION_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
+      console.log("confirmationCollection: " + JSON.stringify(confirmationCollection));
+      let confirmations = [];
+      if (confirmationCollection != null) {
+        confirmations = (await collection.fetchItems(confirmationCollection.uuid)).map((i) => Confirmation.from_item(i))
+      }
+      return confirmations;
+    },
   }
 }
 </script>

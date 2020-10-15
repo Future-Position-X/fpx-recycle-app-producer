@@ -1,7 +1,5 @@
-/* global SERVICE_URL */
-const BASE_URL = SERVICE_URL;
-
 import session from './session'
+import config from "../config";
 
 export default {
   async validateResponse(response) {
@@ -14,7 +12,7 @@ export default {
 
     if (session.authenticated()) headers.Authorization = `Bearer ${session.token}`;
 
-    const response = await fetch(`${BASE_URL}/collections`, {
+    const response = await fetch(`${config.SERVICE_URL}/collections`, {
       headers,
     });
 
@@ -24,7 +22,7 @@ export default {
     return data;
   },
   async fetchCollection(collectionId) {
-    const response = await fetch(`${BASE_URL}/collections/${collectionId}`, {
+    const response = await fetch(`${config.SERVICE_URL}/collections/${collectionId}`, {
       headers: {
         Authorization: `Bearer ${session.token}`,
         Accept: `application/json`,
@@ -44,7 +42,7 @@ export default {
     if (session.authenticated()) headers.Authorization = `Bearer ${session.token}`;
 
     const response = await fetch(
-      `${BASE_URL}/collections/${collectionId}/items?limit=100000`,
+      `${config.SERVICE_URL}/collections/${collectionId}/items?limit=100000`,
       {
         headers,
       }
@@ -64,10 +62,10 @@ export default {
     if (session.authenticated()) headers.Authorization = `Bearer ${session.token}`;
 
     console.log("YOLO")
-    const url = `${BASE_URL}/collections/by_name/${collectionName}/items?limit=100000&spatial_filter=within-distance&spatial_filter.distance.x=${point.x}&spatial_filter.distance.y=${point.y}&spatial_filter.distance.d=${distance}`;
+    const url = `${config.SERVICE_URL}/collections/by_name/${collectionName}/items?limit=100000&spatial_filter=within-distance&spatial_filter.distance.x=${point.x}&spatial_filter.distance.y=${point.y}&spatial_filter.distance.d=${distance}`;
     console.log(url);
     const response = await fetch(
-      `${BASE_URL}/collections/by_name/${collectionName}/items?limit=100000&spatial_filter=within-distance&spatial_filter.distance.x=${point.x}&spatial_filter.distance.y=${point.y}&spatial_filter.distance.d=${distance}`,
+      `${config.SERVICE_URL}/collections/by_name/${collectionName}/items?limit=100000&spatial_filter=within-distance&spatial_filter.distance.x=${point.x}&spatial_filter.distance.y=${point.y}&spatial_filter.distance.d=${distance}`,
       {
         headers,
       }
@@ -79,7 +77,7 @@ export default {
   },
 
   async createItems(collectionId, items) {
-    const response = await fetch(`${BASE_URL}/collections/${collectionId}/items/bulk`, {
+    const response = await fetch(`${config.SERVICE_URL}/collections/${collectionId}/items/bulk`, {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -93,7 +91,7 @@ export default {
     await this.validateResponse(response);
   },
   async createItem(collectionId, item) {
-    const response = await fetch(`${BASE_URL}/collections/${collectionId}/items`, {
+    const response = await fetch(`${config.SERVICE_URL}/collections/${collectionId}/items`, {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -111,7 +109,7 @@ export default {
     for (const item of items) {
       // TODO: Fix
       // eslint-disable-next-line no-await-in-loop
-      const response = await fetch(`${BASE_URL}/items/${item.id}`, {
+      const response = await fetch(`${config.SERVICE_URL}/items/${item.id}`, {
         method: 'DELETE',
         mode: 'cors',
         headers: {
@@ -125,7 +123,7 @@ export default {
     }
   },
   async updateItems(items) {
-    const response = await fetch(`${BASE_URL}/items`, {
+    const response = await fetch(`${config.SERVICE_URL}/items`, {
       method: 'PUT',
       mode: 'cors',
       headers: {
@@ -142,7 +140,7 @@ export default {
     await this.validateResponse(response);
   },
   async create(collectionName, isPublic) {
-    const response = await fetch(`${BASE_URL}/collections`, {
+    const response = await fetch(`${config.SERVICE_URL}/collections`, {
       method: 'POST',
       mode: 'cors',
       headers: {

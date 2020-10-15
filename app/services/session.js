@@ -1,5 +1,4 @@
-/* global SERVICE_URL */
-const BASE_URL = SERVICE_URL;
+import config from "../config";
 
 export default {
   token: null,
@@ -8,7 +7,7 @@ export default {
     if (!response.ok) throw new Error(await response.text());
   },
   async create(email, password) {
-    const response = await fetch(`${BASE_URL}/sessions`, {
+    const response = await fetch(`${config.SERVICE_URL}/sessions`, {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -37,12 +36,12 @@ export default {
       Authorization: `Bearer ${this.token}`,
       Accept: `application/json`,
     };
-    let response = await fetch(`${BASE_URL}/users/uuid`, {
+    let response = await fetch(`${config.SERVICE_URL}/users/uuid`, {
       headers,
     });
     await this.validateResponse(response);
     const userUuid = (await response.json()).uuid;
-    response = await fetch(`${BASE_URL}/users/${userUuid}`, {
+    response = await fetch(`${config.SERVICE_URL}/users/${userUuid}`, {
       headers,
     });
     await this.validateResponse(response);

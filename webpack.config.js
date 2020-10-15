@@ -284,8 +284,9 @@ module.exports = env => {
                 "TNS_ENV": JSON.stringify(mode),
                 "process": "global.process",
                 "SERVICE_URL": JSON.stringify("http://dev.gia.fpx.se/api/v1"),
-                "PRODUCERS_COLLECTION_NAME": JSON.stringify("pantr-collectors"),
-                "CONSUMERS_COLLECTION_NAME": JSON.stringify("fpx_recycle_consumer"),
+                "RETRIEVER_COLLECTION_NAME": JSON.stringify("pantr-retriever"),
+                "BOOKING_COLLECTION_NAME": JSON.stringify("pantr-booking"),
+                "CONFIRMATION_COLLECTION_NAME": JSON.stringify("pantr-confirmation"),
             }),
             // Remove all files from the out dir.
             new CleanWebpackPlugin(itemsToClean, { verbose: !!verbose }),
