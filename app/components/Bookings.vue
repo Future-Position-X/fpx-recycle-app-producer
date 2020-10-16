@@ -3,9 +3,9 @@
     <GridLayout>
       <GridLayout rows="2*,2*" padding="0 20">
           <StackLayout row="1">
-            <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor"/>
-            <Label text="Markera den pant som du är intresserad av att hämta" textWrap="true" fontWeight="bold"
-                   fontSize="16" class="titleColor" marginTop="12"/>
+            <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
+            <Label text="Markera den pant som du vill att hämta" textWrap="true" fontWeight="bold"
+                   fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
             <RadListView ref="listView"
                          for="(item, index) in displayBookings"
                           @itemTap="onItemTap"
@@ -14,7 +14,8 @@
                 <StackLayout orientation="vertical" padding="10" borderBottomWidth="1" borderBottomColor="black" :backgroundColor="item.selected ? '#eeeeee':'white'">
                   <Label class="bodyTextColor" textWrap="true" fontSize="18">
                     <FormattedString>
-                      <Span>{{index}}. </Span>
+                      <Span>{{index + 1}}. </Span>
+                      <Span fontWeight="bold" text="Hämta senast: "/>
                       <Span>{{item.start_formated}}</Span>
                     </FormattedString>
                   </Label>
@@ -81,7 +82,7 @@ export default {
         let displayBooking = {}
         displayBooking.uuid = booking.uuid;
         displayBooking.selected = this.confirmations.map((c) => c.booking_uuid).includes(booking.uuid);
-        displayBooking.start_formated = date.format(new Date(booking.start), "HH:mm dddd");
+        displayBooking.start_formated = date.format(new Date(booking.start), "ddd DD/MM HH:mm");
         let marker = {
           id: booking.uuid,
           lat: booking.coordinates[1],
