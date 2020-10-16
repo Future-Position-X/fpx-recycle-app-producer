@@ -25,28 +25,55 @@
           </Mapbox>
 
           <GridLayout height="400" verticalAlignment="bottom" background="white" margin="20" padding="0" borderRadius="20" androidElevation="12">
-            <GridLayout margin="30 30 15">
-              <StackLayout>
+            <GridLayout margin="20 20 15">
+              <StackLayout v-show="!showRetrievals">
                 <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
-                <Label text="Markera den pant som du vill att hämta" textWrap="true" fontWeight="bold"
+                <Label text="Markera den pant som du vill att hämta" textWrap="true"
                       fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
                 <RadListView ref="listView"
                             for="(item, index) in displayBookings"
                               @itemTap="onItemTap"
-                              height="200">
+                              height="220"
+                              marginTop="15">
                   <v-template>
-                    <StackLayout orientation="vertical" padding="10" borderBottomWidth="2" borderBottomColor="#ebeced" :backgroundColor="item.selected ? '#eeeeee':'white'">
-                      <Label class="bodyTextColor" textWrap="true" fontSize="16">
+                    <GridLayout columns="auto, *" orientation="vertical" padding="5" borderBottomWidth="2" borderBottomColor="#ebeced">
+                      <Image column="0" marginRight="10" :width="item.selected ? 26 : 20" :height="item.selected ? 26 : 20" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
+                      <Label column="1" class="bodyTextColor" textWrap="true" fontSize="16">
                         <FormattedString>
                           <Span>{{index + 1}}. </Span>
                           <Span fontWeight="bold" text="Hämta senast: "/>
                           <Span>{{item.start_formated}}</Span>
                         </FormattedString>
                       </Label>
-                    </StackLayout>
+                    </GridLayout>
                   </v-template>
                 </RadListView>
-                <Button text="Hämta pant" @onTap="onCollectTap" marginTop="30" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
+                <Button text="Hämta pant" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
+              </StackLayout>
+
+              <StackLayout v-show="showRetrievals">
+                <Label text="Mina panthämtningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
+                <Label text="Markera när du har hämtat panten" textWrap="true"
+                      fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
+                <RadListView ref="listView"
+                            for="(item, index) in displayRetrievals"
+                              @itemTap="onItemTap"
+                              height="220"
+                              marginTop="15">
+                  <v-template>
+                    <GridLayout columns="auto, *, auto" orientation="vertical" padding="5" borderBottomWidth="2" borderBottomColor="#ebeced">
+                      <Image column="0" marginRight="10" width="26" height="26" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
+                      <Label column="1" verticalAlignment="center" class="bodyTextColor" textWrap="true" fontSize="16">
+                        <FormattedString>
+                          <Span fontWeight="bold" text="Senast: "/>
+                          <Span>{{item.start_formatted}}</Span>
+                        </FormattedString>
+                      </Label>
+                      <Label @loaded="onLabelLoaded" column="2" text="Hämtad" background="#0aa67a" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
+                    </GridLayout>
+                  </v-template>
+                </RadListView>
+                <Button text="Ändra områden" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
               </StackLayout>
             </GridLayout>
           </GridLayout>
@@ -62,6 +89,7 @@ import collection from '../services/collection'
 import session from '../services/session'
 import config from "../config";
 import {Booking, Confirmation, Retriever} from "../models";
+import {isAndroid} from 'tns-core-modules/platform';
 
 export default {
   data() {
@@ -71,6 +99,21 @@ export default {
       markers: [],
       booking_requests: [],
       confirmations: [],
+      showRetrievals: false,
+      displayRetrievals: [
+        {
+          start_formatted: "ons 20:15",
+          image_src: "~/assets/images/markers/selected_big_1.png"
+        },
+        {
+          start_formatted: "fre 21:00",
+          image_src: "~/assets/images/markers/selected_big_2.png"
+        },
+        {
+          start_formatted: "fre 22:00",
+          image_src: "~/assets/images/markers/selected_big_3.png"
+        }
+      ]
     }
   },
   methods: {
@@ -85,17 +128,24 @@ export default {
       this.confirmations = await this.getConfirmations();
       let bookings = [];
       for (const booking of this.booking_requests) {
+        let index = this.booking_requests.indexOf(booking);
         let displayBooking = {}
         displayBooking.uuid = booking.uuid;
         displayBooking.selected = this.confirmations.map((c) => c.booking_uuid).includes(booking.uuid);
         displayBooking.start_formated = date.format(new Date(booking.start), "ddd DD/MM HH:mm");
+        displayBooking.image_src = displayBooking.selected
+            ? `~/assets/images/markers/selected_big_${index + 1}.png`
+            : `~/assets/images/markers/unselected_${index + 1}.png`;
+        
         let marker = {
           id: booking.uuid,
           lat: booking.coordinates[1],
           lng: booking.coordinates[0],
           title: booking.retriever_uuid,
           onTap: this.onMarkerTap,
-          iconPath: displayBooking.selected ? "assets/images/icon_mapmark_onmap_selected.png" : "assets/images/icon_mapmark_onmap_unselected.png",
+          iconPath: displayBooking.selected 
+            ? `assets/images/markers/selected_${index + 1}.png`
+            : `assets/images/markers/unselected_${index + 1}.png`,
         };
         bookings.push(displayBooking);
         this.markers.push(marker);
@@ -103,7 +153,11 @@ export default {
       this.map.addMarkers(this.markers);
       this.displayBookings = bookings
     },
-
+    onLabelLoaded(args) {
+      if (isAndroid) {
+        args.object.nativeView.setGravity(17)
+      }
+    },
     async onMapReady(args) {
       this.map = args.map;
       const center = this.$store.state.selectedCoordinates;
@@ -129,12 +183,15 @@ export default {
     toggleBooking(id) {
       const booking = this.displayBookings.find((b) => b.uuid === id);
       const marker = this.markers.find((m) => m.id === id);
+      const index = this.displayBookings.indexOf(booking);
       booking.selected = !booking.selected
-      if(booking.selected) {
-        marker.iconPath = "assets/images/icon_mapmark_onmap_selected.png"
-      } else {
-        marker.iconPath = "assets/images/icon_mapmark_onmap_unselected.png"
-      }
+      booking.image_src = booking.selected
+            ? `~/assets/images/markers/selected_big_${index + 1}.png`
+            : `~/assets/images/markers/unselected_${index + 1}.png`;
+      marker.iconPath = booking.selected
+        ? `assets/images/markers/selected_${index + 1}.png`
+        : `assets/images/markers/unselected_${index + 1}.png`;
+        
       this.map.removeMarkers([marker.id]);
       this.map.addMarkers([marker]);
     },
