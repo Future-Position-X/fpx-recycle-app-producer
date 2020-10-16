@@ -1,3 +1,5 @@
+import os
+
 unselected = "#a9c2d9" #light blue
 selected = "#0aa67a" #green
 
@@ -8,3 +10,6 @@ for i in range(0, 100):
         the_file.write(unselected_svg)
     with open(f'selected_{i}.svg', 'w') as the_file:
         the_file.write(selected_svg)
+
+os.system('mogrify -format png -background "rgba(0,0,0,0.0)" *.svg')
+os.system('rm -f *.svg')
