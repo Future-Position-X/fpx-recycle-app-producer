@@ -1,50 +1,56 @@
 <template>
   <Page @loaded="onPageLoaded" actionBarHidden="true" background="#f2f2f2">
     <GridLayout>
-      <GridLayout rows="2*,2*" padding="0 20">
-          <StackLayout row="1">
-            <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
-            <Label text="Markera den pant som du vill att hämta" textWrap="true" fontWeight="bold"
-                   fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
-            <RadListView ref="listView"
-                         for="(item, index) in displayBookings"
-                          @itemTap="onItemTap"
-                          height="200">
-              <v-template>
-                <StackLayout orientation="vertical" padding="10" borderBottomWidth="1" borderBottomColor="black" :backgroundColor="item.selected ? '#eeeeee':'white'">
-                  <Label class="bodyTextColor" textWrap="true" fontSize="18">
-                    <FormattedString>
-                      <Span>{{index + 1}}. </Span>
-                      <Span fontWeight="bold" text="Hämta senast: "/>
-                      <Span>{{item.start_formated}}</Span>
-                    </FormattedString>
-                  </Label>
-                </StackLayout>
-              </v-template>
-            </RadListView>
-            <Button text="Hämta markerad pant" @onTap="onCollectTap" marginTop="30" textTransform="none" background="#1f2d40" color="white" borderRadius="40" width="80%" height="57" fontSize="21" class="bodyTextColor"/>
-          </StackLayout>
-        <Mapbox row="0"
-                ref="map"
-                accessToken="pk.eyJ1IjoidHJpcHRlYyIsImEiOiJja2R0d2ZtNHMwMGM5MzdxNHVwZGcyeG1xIn0.yAZW46zUKkS9RL3O7kBWaQ"
-                mapStyle="mapbox://styles/mapbox/light-v9"
-                latitude="60.6708058985168"
-                longitude="17.14024985657789"
-                hideCompass="true"
-                zoomLevel="4"
-                showUserLocation="true"
-                disableZoom="false"
-                disableRotation="false"
-                disableScroll="false"
-                disableTilt="false"
-                @mapReady="onMapReady($event)">
-        </Mapbox>
-        <Image row="0" src="~/assets/images/dots.png" stretch="fill" horizontalAlignment="left" verticalAlignment="top"
-               marginTop="30" marginLeft="25" width="25" height="25"/>
-        <Image row="0" src="~/assets/images/Pantr_logo@3x.png" stretch="fill" horizontalAlignment="center"
-               verticalAlignment="top" width="150" height="35" marginTop="25"/>
-        <Image row="0" src="~/assets/images/icon_help@3x.png" stretch="fill" horizontalAlignment="right"
-               verticalAlignment="top" marginTop="30" marginRight="25" width="25" height="25"/>
+      <GridLayout>
+          <Image row="0" src="~/assets/images/dots.png" stretch="fill" horizontalAlignment="left" verticalAlignment="top"
+                marginTop="30" marginLeft="25" width="25" height="25"/>
+          <Image row="0" src="~/assets/images/Pantr_logo@3x.png" stretch="fill" horizontalAlignment="center"
+                verticalAlignment="top" width="150" height="35" marginTop="25"/>
+          <Image row="0" src="~/assets/images/icon_help@3x.png" stretch="fill" horizontalAlignment="right"
+                verticalAlignment="top" marginTop="30" marginRight="25" width="25" height="25"/>
+          <Mapbox row="0"
+                  ref="map"
+                  accessToken="pk.eyJ1IjoidHJpcHRlYyIsImEiOiJja2R0d2ZtNHMwMGM5MzdxNHVwZGcyeG1xIn0.yAZW46zUKkS9RL3O7kBWaQ"
+                  mapStyle="mapbox://styles/mapbox/light-v9"
+                  latitude="60.6708058985168"
+                  longitude="17.14024985657789"
+                  hideCompass="true"
+                  zoomLevel="4"
+                  showUserLocation="true"
+                  disableZoom="false"
+                  disableRotation="false"
+                  disableScroll="false"
+                  disableTilt="false"
+                  @mapReady="onMapReady($event)">
+          </Mapbox>
+
+          <GridLayout height="400" verticalAlignment="bottom" background="white" margin="20" padding="0" borderRadius="20" androidElevation="12">
+            <GridLayout margin="30 30 15">
+              <StackLayout>
+                <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
+                <Label text="Markera den pant som du vill att hämta" textWrap="true" fontWeight="bold"
+                      fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
+                <RadListView ref="listView"
+                            for="(item, index) in displayBookings"
+                              @itemTap="onItemTap"
+                              height="200">
+                  <v-template>
+                    <StackLayout orientation="vertical" padding="10" borderBottomWidth="2" borderBottomColor="#ebeced" :backgroundColor="item.selected ? '#eeeeee':'white'">
+                      <Label class="bodyTextColor" textWrap="true" fontSize="16">
+                        <FormattedString>
+                          <Span>{{index + 1}}. </Span>
+                          <Span fontWeight="bold" text="Hämta senast: "/>
+                          <Span>{{item.start_formated}}</Span>
+                        </FormattedString>
+                      </Label>
+                    </StackLayout>
+                  </v-template>
+                </RadListView>
+                <Button text="Hämta pant" @onTap="onCollectTap" marginTop="30" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
+              </StackLayout>
+            </GridLayout>
+          </GridLayout>
+
       </GridLayout>
     </GridLayout>
   </Page>
