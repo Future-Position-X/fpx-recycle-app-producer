@@ -101,20 +101,7 @@ export default {
       markers: [],
       booking_requests: [],
       confirmations: [],
-      displayRetrievals: [
-        {
-          start_formatted: "ons 20:15",
-          image_src: "~/assets/images/markers/selected_big_1.png"
-        },
-        {
-          start_formatted: "fre 21:00",
-          image_src: "~/assets/images/markers/selected_big_2.png"
-        },
-        {
-          start_formatted: "fre 22:00",
-          image_src: "~/assets/images/markers/selected_big_3.png"
-        }
-      ]
+      displayRetrievals: []
     }
   },
   methods: {
@@ -154,6 +141,10 @@ export default {
       }
       this.map.addMarkers(this.markers);
       this.displayBookings = bookings
+
+      if (this.showRetrievals) {
+        await this.displayConfirmations();
+      }
     },
     onLabelLoaded(args) {
       if (isAndroid) {
@@ -243,6 +234,23 @@ export default {
       }
       return confirmations;
     },
+
+    async displayConfirmations() {
+      const confirmations = await this.getConfirmations();
+      const displayConfs = [];
+
+      for (const c of confirmations) {
+        const item = await collection.fetchItem(c.booking_uuid);
+        const index = confirmations.indexOf(c);
+        
+        displayConfs.push({
+          start_formatted: date.format(new Date(item.properties.pantr_start), "ddd HH:mm"),
+          image_src: "~/assets/images/markers/selected_big_" + (index + 1) + ".png"
+        });
+      }
+
+      this.displayRetrievals = displayConfs;
+    }
   }
 }
 </script>

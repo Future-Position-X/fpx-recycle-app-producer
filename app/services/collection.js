@@ -53,6 +53,25 @@ export default {
     const data = await response.json();
     return data;
   },
+  async fetchItem(itemId) {
+    const headers = {
+      Accept: `application/json`,
+    };
+
+    if (session.authenticated()) headers.Authorization = `Bearer ${session.token}`;
+
+    const response = await fetch(
+      `${config.SERVICE_URL}/items/${itemId}`,
+      {
+        headers,
+      }
+    );
+
+    await this.validateResponse(response);
+
+    const data = await response.json();
+    return data;
+  },
 
   async fetchItemsByNameWithin(collectionName, point, distance) {
     const headers = {

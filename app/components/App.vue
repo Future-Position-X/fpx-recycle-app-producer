@@ -54,7 +54,9 @@
             }
           });
         },
-        onShowRetrievalsTap() {
+        async onShowRetrievalsTap() {
+          const center = await this.map.getCenter();
+          this.$store.state.selectedCoordinates = center;
           this.$navigateTo(Bookings, {
             props: {
               showRetrievals: true
