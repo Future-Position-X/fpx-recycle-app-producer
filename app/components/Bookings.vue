@@ -85,6 +85,7 @@
 
 <script>
 import date from 'date-and-time';
+import se from 'date-and-time/locale/se';
 import collection from '../services/collection'
 import session from '../services/session'
 import config from "../config";
@@ -118,6 +119,7 @@ export default {
   },
   methods: {
     async onPageLoaded() {
+      date.locale(se);
       const center = this.$store.state.selectedCoordinates;
       console.log(center);
       await session.create("recycleconsumer@gia.fpx.se", "test");

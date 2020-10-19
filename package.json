@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@vue/devtools": "^5.3.3",
-    "date-and-time": "^0.14.1",
+    "date-and-time": "https://github.com/Future-Position-X/date-and-time.git",
     "nativescript": "^7.0.10",
     "nativescript-carousel": "^6.1.1",
     "nativescript-drop-down": "^5.0.6",
