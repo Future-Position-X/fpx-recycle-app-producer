@@ -158,6 +158,20 @@ export default {
 
     await this.validateResponse(response);
   },
+  async updateItem(item) {
+    const response = await fetch(`${config.SERVICE_URL}/items/${item.uuid}`, {
+      method: 'PUT',
+      mode: 'cors',
+      headers: {
+        Authorization: `Bearer ${session.token}`,
+        'Content-Type': `application/json`,
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(item),
+    });
+    
+    await this.validateResponse(response);
+  },
   async create(collectionName, isPublic) {
     const response = await fetch(`${config.SERVICE_URL}/collections`, {
       method: 'POST',

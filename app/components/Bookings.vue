@@ -69,7 +69,7 @@
                           <Span>{{item.start_formatted}}</Span>
                         </FormattedString>
                       </Label>
-                      <Label @loaded="onLabelLoaded" column="2" text="Hämtad" background="#0aa67a" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
+                      <Label @loaded="onLabelLoaded" @onTap="onRetrievedTap(item)" column="2" text="Hämtad" background="#0aa67a" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
                     </GridLayout>
                   </v-template>
                 </RadListView>
@@ -89,7 +89,7 @@ import se from 'date-and-time/locale/se';
 import collection from '../services/collection'
 import session from '../services/session'
 import config from "../config";
-import {Booking, Confirmation, Retriever} from "../models";
+import {Booking, Confirmation, Retriever, BookingStatus} from "../models";
 import {isAndroid} from 'tns-core-modules/platform';
 
 export default {
@@ -150,6 +150,36 @@ export default {
       }
       this.map.addMarkers(this.markers);
       this.displayBookings = bookings
+    },
+    async displayConfirmations() {
+      const confirmations = await this.getConfirmations();
+      const displayConfs = [];
+
+      for (const c of confirmations) {
+        const item = await collection.fetchItem(c.booking_uuid);
+        const index = confirmations.indexOf(c);
+        
+        displayConfs.push({
+          booking: item,
+          start_formatted: date.format(new Date(item.properties.pantr_start), "ddd HH:mm"),
+          image_src: "~/assets/images/markers/selected_big_" + (index + 1) + ".png"
+        });
+        
+        this.markers.push({
+          id: item.uuid,
+          lat: item.geometry.coordinates[1],
+          lng: item.geometry.coordinates[0],
+          iconPath: `assets/images/markers/selected_${index + 1}.png`
+        });
+      }
+
+      this.displayRetrievals = displayConfs;
+      this.map.addMarkers(this.markers);
+    },
+    async onRetrievedTap(item) {
+      console.log("onRetrievedTap " + JSON.stringify(item));
+      item.booking.properties.pantr_status = BookingStatus.DONE;
+      await collection.updateItem(item.booking);
     },
     onLabelLoaded(args) {
       if (isAndroid) {
@@ -238,31 +268,6 @@ export default {
         confirmations = (await collection.fetchItems(confirmationCollection.uuid)).map((i) => Confirmation.from_item(i))
       }
       return confirmations;
-    },
-
-    async displayConfirmations() {
-      const confirmations = await this.getConfirmations();
-      const displayConfs = [];
-
-      for (const c of confirmations) {
-        const item = await collection.fetchItem(c.booking_uuid);
-        const index = confirmations.indexOf(c);
-        
-        displayConfs.push({
-          start_formatted: date.format(new Date(item.properties.pantr_start), "ddd HH:mm"),
-          image_src: "~/assets/images/markers/selected_big_" + (index + 1) + ".png"
-        });
-        
-        this.markers.push({
-          id: item.uuid,
-          lat: item.geometry.coordinates[1],
-          lng: item.geometry.coordinates[0],
-          iconPath: `assets/images/markers/selected_${index + 1}.png`
-        });
-      }
-
-      this.displayRetrievals = displayConfs;
-      this.map.addMarkers(this.markers);
     }
   }
 }
