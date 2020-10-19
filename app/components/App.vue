@@ -26,6 +26,7 @@
               <Image src="~/assets/images/icon_mapmark@3x.png" stretch="none" horizontalAlignment="center" />
               <Label text="Markera de områden där du kan tänka dig att hämta upp pant." marginTop="10" textWrap="true" lineHeight="3" fontSize="18" class="bodyTextColor" />
               <Label text="När någon begär hämtning av pant inom de områden du valt får du information om vart panten befinner sig." marginTop="10" textWrap="true" lineHeight="3" fontSize="18" class="bodyTextColor" />
+              <Label text="Du kan när som helst ändra vilka områden du vill hämta pant inom." marginTop="10" textWrap="true" lineHeight="3" fontSize="18" class="bodyTextColor" />
               <Button @onTap="onDismissHelp" text="OK, jag förstår!" verticalAlignment="bottom" marginTop="39" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="80%" height="57" fontSize="21" class="bodyTextColor"/>
               <Button @onTap="onRetrievePositionTap" text="Hämta min position" verticalAlignment="bottom" marginTop="10" textTransform="none" background="#1f2d40" color="white" borderRadius="40" width="80%" height="57" fontSize="21" class="bodyTextColor"/>
             </StackLayout>
