@@ -20,7 +20,8 @@
           <Image src="~/assets/images/dots.png" stretch="fill" horizontalAlignment="left" verticalAlignment="top" marginTop="30" marginLeft="25" width="25" height="25"/>
           <Image src="~/assets/images/Pantr_logo@3x.png" stretch="fill" horizontalAlignment="center" verticalAlignment="top" width="150" height="35" marginTop="25"/>
           <Image src="~/assets/images/icon_help@3x.png" @onTap="onHelpTap" stretch="fill" horizontalAlignment="right" verticalAlignment="top" marginTop="30" marginRight="25" width="25" height="25"/>
-          <Button @onTap="onShowBookingsTap" text="Visa pantlämningar" verticalAlignment="bottom" horizontalAlignment="bottom" marginBottom="39" textTransform="none" background="#1f2d40" color="white" borderRadius="40" width="60%" height="57" fontSize="21"/>
+          <Button @onTap="onShowBookingsTap" text="Visa pantlämningar" verticalAlignment="bottom" horizontalAlignment="bottom" marginBottom="110" textTransform="none" background="#1f2d40" color="white" borderRadius="40" width="60%" height="57" fontSize="21"/>
+          <Button @onTap="onShowRetrievalsTap" text="Visa panthämtningar" verticalAlignment="bottom" horizontalAlignment="bottom" marginBottom="39" textTransform="none" background="#1f2d40" color="white" borderRadius="40" width="60%" height="57" fontSize="21"/>
           <GridLayout v-if="showMapHelp" borderRadius="20" verticalAlignment="center" horizontalAlignment="center" background="white" androidElevation="12" margin="30" padding="30">
             <StackLayout>
               <Image src="~/assets/images/icon_mapmark@3x.png" stretch="none" horizontalAlignment="center" />
@@ -47,7 +48,18 @@
         async onShowBookingsTap() {
           const center = await this.map.getCenter();
           this.$store.state.selectedCoordinates = center;
-          this.$navigateTo(Bookings);
+          this.$navigateTo(Bookings, {
+            props: {
+              showRetrievals: false
+            }
+          });
+        },
+        onShowRetrievalsTap() {
+          this.$navigateTo(Bookings, {
+            props: {
+              showRetrievals: true
+            }
+          });
         },
         onHelpTap() {
           this.showMapHelp = true;

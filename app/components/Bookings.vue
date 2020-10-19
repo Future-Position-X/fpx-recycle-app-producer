@@ -93,6 +93,7 @@ import {Booking, Confirmation, Retriever} from "../models";
 import {isAndroid} from 'tns-core-modules/platform';
 
 export default {
+  props: ['showRetrievals'],
   data() {
     return {
       map: null,
@@ -100,7 +101,6 @@ export default {
       markers: [],
       booking_requests: [],
       confirmations: [],
-      showRetrievals: false,
       displayRetrievals: [
         {
           start_formatted: "ons 20:15",
