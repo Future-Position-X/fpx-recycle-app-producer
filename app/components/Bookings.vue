@@ -107,9 +107,18 @@ export default {
   methods: {
     async onPageLoaded() {
       date.locale(se);
+      
+      await session.create("recycleconsumer@gia.fpx.se", "test");
+      
+      if (this.showRetrievals) {
+        await this.displayConfirmations();
+      } else {
+        await this.showBookings();
+      }
+    },
+    async showBookings() {
       const center = this.$store.state.selectedCoordinates;
       console.log(center);
-      await session.create("recycleconsumer@gia.fpx.se", "test");
       this.booking_requests = (await collection.fetchItemsByNameWithin(config.BOOKING_COLLECTION_NAME, {
         x: center.lng,
         y: center.lat
@@ -141,10 +150,6 @@ export default {
       }
       this.map.addMarkers(this.markers);
       this.displayBookings = bookings
-
-      if (this.showRetrievals) {
-        await this.displayConfirmations();
-      }
     },
     onLabelLoaded(args) {
       if (isAndroid) {
@@ -247,9 +252,17 @@ export default {
           start_formatted: date.format(new Date(item.properties.pantr_start), "ddd HH:mm"),
           image_src: "~/assets/images/markers/selected_big_" + (index + 1) + ".png"
         });
+        
+        this.markers.push({
+          id: item.uuid,
+          lat: item.geometry.coordinates[1],
+          lng: item.geometry.coordinates[0],
+          iconPath: `assets/images/markers/selected_${index + 1}.png`
+        });
       }
 
       this.displayRetrievals = displayConfs;
+      this.map.addMarkers(this.markers);
     }
   }
 }
