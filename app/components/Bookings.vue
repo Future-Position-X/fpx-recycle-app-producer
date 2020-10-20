@@ -190,8 +190,12 @@ export default {
         args.object.nativeView.setGravity(17)
       }
     },
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    },
     async onMapReady(args) {
       this.map = args.map;
+      await this.sleep(1000);
       const center = this.$store.state.selectedCoordinates;
       await this.map.setCenter({
         lat: center.lat,
