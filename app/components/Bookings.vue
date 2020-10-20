@@ -24,7 +24,7 @@
                   @mapReady="onMapReady($event)">
           </Mapbox>
 
-          <GridLayout height="400" verticalAlignment="bottom" background="white" margin="20" padding="0" borderRadius="20" androidElevation="12">
+          <GridLayout :height="hideCard ? 70 : 400" @onTap="onCardTap" verticalAlignment="bottom" background="white" margin="20" padding="0" borderRadius="20" androidElevation="12">
             <GridLayout margin="20 20 15">
               <StackLayout v-show="!showRetrievals">
                 <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
@@ -101,7 +101,8 @@ export default {
       markers: [],
       booking_requests: [],
       confirmations: [],
-      displayRetrievals: []
+      displayRetrievals: [],
+      hideCard: true
     }
   },
   methods: {
@@ -115,6 +116,9 @@ export default {
       } else {
         await this.showBookings();
       }
+    },
+    onCardTap() {
+      this.hideCard = !this.hideCard;
     },
     async showBookings() {
       const center = this.$store.state.selectedCoordinates;
