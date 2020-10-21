@@ -21,6 +21,12 @@ Vue.registerElement("Mapbox", () => require("nativescript-mapbox").MapboxView)
 
 Vue.use(RadListView);
 
+const appSettings = require("tns-core-modules/application-settings");
+const retriever_uuid = appSettings.getString("retriever_uuid")
+if(!retriever_uuid) {
+  appSettings.setString("retriever_uuid", "2d7259af-01db-4cc5-b53f-495b078414a1")
+}
+
 new Vue({
   store,
   //render: h => h('frame', [h(Bookings)])

@@ -89,8 +89,11 @@ import se from 'date-and-time/locale/se';
 import collection from '../services/collection'
 import session from '../services/session'
 import config from "../config";
-import {Booking, Confirmation, Retriever, BookingStatus} from "../models";
+import {Booking, Confirmation, BookingStatus} from "../models";
 import {isAndroid} from 'tns-core-modules/platform';
+
+const appSettings = require("tns-core-modules/application-settings");
+const RETRIEVER_UUID = appSettings.getString("retriever_uuid")
 
 export default {
   props: ['showRetrievals'],
@@ -240,6 +243,7 @@ export default {
           const confirmation = new Confirmation();
           confirmation.coordinates = b.coordinates;
           confirmation.booking_uuid = b.uuid;
+          confirmation.retriever_uuid = RETRIEVER_UUID;
           return confirmation;
         });
 
@@ -257,6 +261,7 @@ export default {
         }
 
         console.log("adding confirmations to collection");
+        console.log("RETRIEVER_UUID", RETRIEVER_UUID);
         for(let confirmation of confirmations) {
           console.log("confirmation:" + JSON.stringify(confirmation.to_item()))
           this.confirmations.push(confirmation);
@@ -265,6 +270,8 @@ export default {
     },
 
     async getConfirmations() {
+      const confirmed_bookings = (await collection.fetchItemsByNameAndProps(config.BOOKING_COLLECTION_NAME, {pantr_status: BookingStatus.CONFIRMED, pantr_retriever_uuid: RETRIEVER_UUID})).map((i) => Booking.from_item(i))
+      console.log("Confimed bookings: ", JSON.stringify(confirmed_bookings));
       console.log("fetching collections by name");
       const collections = await collection.fetchCollections();
       console.log("collections: " + JSON.stringify(collections));
@@ -274,6 +281,7 @@ export default {
       let confirmations = [];
       if (confirmationCollection != null) {
         confirmations = (await collection.fetchItems(confirmationCollection.uuid)).map((i) => Confirmation.from_item(i))
+        confirmations = confirmations.filter((c) => confirmed_bookings.map((cb) => cb.uuid).includes(c.booking_uuid))
       }
       return confirmations;
     }

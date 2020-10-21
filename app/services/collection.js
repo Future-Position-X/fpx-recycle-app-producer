@@ -80,11 +80,34 @@ export default {
 
     if (session.authenticated()) headers.Authorization = `Bearer ${session.token}`;
 
-    console.log("YOLO")
     const url = `${config.SERVICE_URL}/collections/by_name/${collectionName}/items?limit=100000&spatial_filter=within-distance&spatial_filter.distance.x=${point.x}&spatial_filter.distance.y=${point.y}&spatial_filter.distance.d=${distance}`;
     console.log(url);
     const response = await fetch(
-      `${config.SERVICE_URL}/collections/by_name/${collectionName}/items?limit=100000&spatial_filter=within-distance&spatial_filter.distance.x=${point.x}&spatial_filter.distance.y=${point.y}&spatial_filter.distance.d=${distance}`,
+      url,
+      {
+        headers,
+      }
+    );
+    await this.validateResponse(response);
+
+    const data = await response.json();
+    return data;
+  },
+
+  async fetchItemsByNameAndProps(collectionName, properties) {
+    const headers = {
+      Accept: `application/json`,
+    };
+
+    if (session.authenticated()) headers.Authorization = `Bearer ${session.token}`;
+    let property_filter = []
+    for (const [key, value] of Object.entries(properties)) {
+      property_filter.push(`${key}=${value}`);
+    }
+    const url = `${config.SERVICE_URL}/collections/by_name/${collectionName}/items?limit=100000&property_filter=${property_filter.join(',')}`;
+    console.log(url);
+    const response = await fetch(
+      url,
       {
         headers,
       }

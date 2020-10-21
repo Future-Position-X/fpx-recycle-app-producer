@@ -58,7 +58,8 @@ class Booking {
 
 class Confirmation {
   uuid;
-  booking_uuid; // reference to the original "pantr-consumer" item
+  booking_uuid;
+  retriever_uuid;
   coordinates;
 
   to_item() {
@@ -70,6 +71,7 @@ class Confirmation {
       },
       properties: {
         pantr_booking_uuid: this.booking_uuid,
+        pantr_retriever_uuid: this.retriever_uuid,
       }
     }
   }
@@ -78,6 +80,7 @@ class Confirmation {
     confirmation.uuid = item.uuid;
     confirmation.coordinates = item.geometry.coordinates;
     confirmation.booking_uuid = item.properties.pantr_booking_uuid;
+    confirmation.retriever_uuid = item.properties.pantr_retriever_uuid;
     return confirmation;
   }
 }
