@@ -1,4 +1,4 @@
-# fpx-pant
+# pantr-retriever
 
 > A native application built with NativeScript-Vue
 
