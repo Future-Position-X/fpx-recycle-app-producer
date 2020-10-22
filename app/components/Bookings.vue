@@ -40,7 +40,6 @@
                       <Image column="0" marginRight="10" :width="item.selected ? 26 : 20" :height="item.selected ? 26 : 20" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
                       <Label column="1" class="bodyTextColor" textWrap="true" fontSize="16">
                         <FormattedString>
-                          <Span>{{index + 1}}. </Span>
                           <Span fontWeight="bold" text="Hämta senast: "/>
                           <Span>{{item.start_formated}}</Span>
                         </FormattedString>
