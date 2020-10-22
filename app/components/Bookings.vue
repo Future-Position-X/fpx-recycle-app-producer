@@ -105,7 +105,8 @@ export default {
       booking_requests: [],
       confirmations: [],
       displayRetrievals: [],
-      hideCard: true
+      hideCard: true,
+      suppressHideCard: false
     }
   },
   methods: {
@@ -121,7 +122,11 @@ export default {
       }
     },
     onCardTap() {
-      this.hideCard = !this.hideCard;
+      if (this.suppressHideCard) {
+        this.suppressHideCard = false;
+      } else {
+        this.hideCard = !this.hideCard;
+      }
     },
     async showBookings() {
       const center = this.$store.state.selectedCoordinates;
@@ -236,6 +241,7 @@ export default {
     },
 
     async onCollectTap() {
+        this.suppressHideCard = true;
         let selectedBookingUuids = this.displayBookings.filter((b) => b.selected).map((b) => b.uuid);
         this.displayBookings = this.displayBookings.filter((b) => !selectedBookingUuids.includes(b.uuid));
         this.map.removeMarkers(selectedBookingUuids);
