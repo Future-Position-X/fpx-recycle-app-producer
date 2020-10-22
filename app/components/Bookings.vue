@@ -68,7 +68,7 @@
                           <Span>{{item.start_formatted}}</Span>
                         </FormattedString>
                       </Label>
-                      <Label @loaded="onLabelLoaded" @onTap="onRetrievedTap(item)" column="2" text="Hämtad" background="#0aa67a" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
+                      <Label @loaded="onLabelLoaded" @onTap="onRetrievedTap(item)" column="2" text="Hämtad" :background="item.collected ? '#0aa67a' : '#a9c2d9'" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
                     </GridLayout>
                   </v-template>
                 </RadListView>
@@ -172,6 +172,7 @@ export default {
         
         displayConfs.push({
           booking: item,
+          collected: false,
           start_formatted: date.format(new Date(item.properties.pantr_start), "ddd HH:mm"),
           image_src: "~/assets/images/markers/selected_big_" + (index + 1) + ".png"
         });
@@ -190,6 +191,7 @@ export default {
     async onRetrievedTap(item) {
       this.suppressHideCard = true;
       console.log("onRetrievedTap " + JSON.stringify(item));
+      item.collected = true;
       item.booking.properties.pantr_status = BookingStatus.DONE;
       await collection.updateItem(item.booking);
     },
