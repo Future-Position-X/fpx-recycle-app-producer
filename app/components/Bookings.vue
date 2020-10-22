@@ -56,20 +56,19 @@
                       fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
                 <RadListView ref="listView"
                             for="(item, index) in displayRetrievals"
-                              @itemTap="onItemTap"
                               height="220"
                               marginTop="15">
                   <v-template>
-                    <GridLayout columns="auto, *, auto" orientation="vertical" padding="5" borderBottomWidth="2" borderBottomColor="#ebeced">
-                      <Image column="0" marginRight="10" width="26" height="26" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
-                      <Label column="1" verticalAlignment="center" class="bodyTextColor" textWrap="true" fontSize="16">
+                    <StackLayout orientation="horizontal" :padding="item.selected ? 5 : 8" borderBottomWidth="2" borderBottomColor="#ebeced">
+                      <Image marginRight="8" marginLeft="10" marginTop="1" width="26" height="26" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
+                      <Label class="bodyTextColor" textWrap="true" fontSize="16" marginTop="3">
                         <FormattedString>
                           <Span fontWeight="bold" text="Senast: "/>
                           <Span>{{item.start_formatted}}</Span>
                         </FormattedString>
                       </Label>
-                      <Label @loaded="onLabelLoaded" @onTap="onRetrievedTap(item)" column="2" text="Hämtad" :background="item.collected ? '#0aa67a' : '#a9c2d9'" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
-                    </GridLayout>
+                      <Label @loaded="onLabelLoaded" @onTap="onRetrievedTap(item)" marginLeft="30" text="Hämtad" :background="item.collected ? '#0aa67a' : '#a9c2d9'" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
+                    </StackLayout>
                   </v-template>
                 </RadListView>
                 <Button text="Ändra områden" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
