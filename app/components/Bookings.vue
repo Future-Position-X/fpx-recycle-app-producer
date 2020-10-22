@@ -47,7 +47,7 @@
                     </GridLayout>
                   </v-template>
                 </RadListView>
-                <Button text="Hämta pant" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
+                <Button text="Anmäl intresse" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
               </StackLayout>
 
               <StackLayout v-show="showRetrievals">
