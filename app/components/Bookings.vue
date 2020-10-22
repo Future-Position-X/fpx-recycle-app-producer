@@ -237,6 +237,8 @@ export default {
 
     async onCollectTap() {
         let selectedBookingUuids = this.displayBookings.filter((b) => b.selected).map((b) => b.uuid);
+        this.displayBookings = this.displayBookings.filter((b) => !selectedBookingUuids.includes(b.uuid));
+        this.map.removeMarkers(selectedBookingUuids);
         selectedBookingUuids = selectedBookingUuids.filter((uuid) => !this.confirmations.map((c) => c.booking_uuid).includes(uuid));
         const selectedBookings = this.booking_requests.filter((b) => selectedBookingUuids.includes(b.uuid))
         let confirmations = selectedBookings.map((b) =>  {
