@@ -129,7 +129,7 @@ export default {
     async showBookings() {
       const center = this.$store.state.selectedCoordinates;
       console.log(center);
-      this.booking_requests = (await collection.fetchItemsByNameWithin(config.BOOKING_COLLECTION_NAME, {
+      this.booking_requests = (await collection.fetchItemsByNameAndPropsWithin(config.BOOKING_COLLECTION_NAME, {pantr_status: BookingStatus.WAITING}, {
         x: center.lng,
         y: center.lat
       }, 50000)).map((i) => Booking.from_item(i));
