@@ -188,6 +188,7 @@ export default {
       this.map.addMarkers(this.markers);
     },
     async onRetrievedTap(item) {
+      this.suppressHideCard = true;
       console.log("onRetrievedTap " + JSON.stringify(item));
       item.booking.properties.pantr_status = BookingStatus.DONE;
       await collection.updateItem(item.booking);
