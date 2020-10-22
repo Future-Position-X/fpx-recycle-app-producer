@@ -36,15 +36,15 @@
                               height="220"
                               marginTop="15">
                   <v-template>
-                    <GridLayout columns="auto, *" orientation="vertical" padding="5" borderBottomWidth="2" borderBottomColor="#ebeced">
-                      <Image column="0" marginRight="10" :width="item.selected ? 26 : 20" :height="item.selected ? 26 : 20" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
-                      <Label column="1" class="bodyTextColor" textWrap="true" fontSize="16">
+                    <StackLayout orientation="horizontal" :padding="item.selected ? 5 : 8" borderBottomWidth="2" borderBottomColor="#ebeced">
+                      <Image :marginRight="item.selected ? 8 : 11" :marginLeft="item.selected ? 10 : 10.5" marginTop="1" :width="item.selected ? 26 : 20" :height="item.selected ? 26 : 20" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
+                      <Label class="bodyTextColor" textWrap="true" fontSize="16" :marginTop="item.selected ? 3 : 0">
                         <FormattedString>
                           <Span fontWeight="bold" text="Hämta senast: "/>
                           <Span>{{item.start_formated}}</Span>
                         </FormattedString>
                       </Label>
-                    </GridLayout>
+                    </StackLayout>
                   </v-template>
                 </RadListView>
                 <Button text="Anmäl intresse" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
