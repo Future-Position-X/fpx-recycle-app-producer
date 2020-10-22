@@ -1,5 +1,5 @@
 <template>
-    <Page actionBarHidden="true">
+    <Page @loaded="onPageLoaded" actionBarHidden="true">
         <GridLayout columns="*" rows="*, auto">
             <Mapbox
               ref="map"
@@ -32,36 +32,115 @@
               <Button @onTap="onRetrievePositionTap" text="Hämta min position" verticalAlignment="bottom" marginTop="10" textTransform="none" background="#1f2d40" color="white" borderRadius="40" width="80%" height="57" fontSize="21" class="bodyTextColor"/>
             </StackLayout>
           </GridLayout>
+
+          <GridLayout v-show="!hideCard" height="400" @onTap="onCardTap" verticalAlignment="bottom" background="white" margin="20" padding="0" borderRadius="20" androidElevation="12">
+            <GridLayout margin="20 20 15">
+              <StackLayout v-show="!showRetrievals">
+                <Label text="Pantlämningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
+                <Label text="Markera den pant som du vill att hämta" textWrap="true"
+                      fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
+                <RadListView ref="listView"
+                            for="(item, index) in displayBookings"
+                              @itemTap="onItemTap"
+                              height="220"
+                              marginTop="15">
+                  <v-template>
+                    <StackLayout orientation="horizontal" :padding="item.selected ? 5 : 8" borderBottomWidth="2" borderBottomColor="#ebeced">
+                      <Image :marginRight="item.selected ? 8 : 11" :marginLeft="item.selected ? 10 : 10.5" marginTop="1" :width="item.selected ? 26 : 20" :height="item.selected ? 26 : 20" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
+                      <Label class="bodyTextColor" textWrap="true" fontSize="16" :marginTop="item.selected ? 3 : 0">
+                        <FormattedString>
+                          <Span fontWeight="bold" text="Hämta senast: "/>
+                          <Span>{{item.start_formated}}</Span>
+                        </FormattedString>
+                      </Label>
+                    </StackLayout>
+                  </v-template>
+                </RadListView>
+                <Button text="Anmäl intresse" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
+              </StackLayout>
+
+              <StackLayout v-show="showRetrievals">
+                <Label text="Mina panthämtningar" fontWeight="bold" fontSize="23" class="titleColor" horizontalAlignment="center"/>
+                <Label text="Markera när du har hämtat panten" textWrap="true"
+                      fontSize="16" class="titleColor" marginTop="12" horizontalAlignment="center"/>
+                <RadListView ref="listView"
+                            for="(item, index) in displayRetrievals"
+                              height="220"
+                              marginTop="15">
+                  <v-template>
+                    <StackLayout orientation="horizontal" :padding="item.selected ? 5 : 8" borderBottomWidth="2" borderBottomColor="#ebeced">
+                      <Image marginRight="8" marginLeft="10" marginTop="1" width="26" height="26" stretch="fill" horizontalAlignment="left" :src="item.image_src"/>
+                      <Label class="bodyTextColor" textWrap="true" fontSize="16" marginTop="3">
+                        <FormattedString>
+                          <Span fontWeight="bold" text="Senast: "/>
+                          <Span>{{item.start_formatted}}</Span>
+                        </FormattedString>
+                      </Label>
+                      <Label @loaded="onLabelLoaded" @onTap="onRetrievedTap(item)" marginLeft="30" text="Hämtad" :background="item.collected ? '#0aa67a' : '#a9c2d9'" color="white" borderRadius="20" width="27%" height="30" fontSize="16" class="bodyTextColor"/>
+                    </StackLayout>
+                  </v-template>
+                </RadListView>
+                <Button text="Ändra områden" @onTap="onCollectTap" marginTop="10" textTransform="none" background="#0aa67a" color="white" borderRadius="40" width="70%" height="50" fontSize="16" class="bodyTextColor"/>
+              </StackLayout>
+            </GridLayout>
+          </GridLayout>
         </GridLayout>
     </Page>
 </template>
 
 <script>
-  import Bookings from './Bookings'
+  import date from 'date-and-time';
+  import se from 'date-and-time/locale/se';
+  import collection from '../services/collection'
+  import session from '../services/session'
+  import config from "../config";
+  import {Booking, Confirmation, BookingStatus} from "../models";
+  import {isAndroid} from 'tns-core-modules/platform';
+
+  const appSettings = require("tns-core-modules/application-settings");
+  const RETRIEVER_UUID = appSettings.getString("retriever_uuid")
+
   export default {
     data() {
       return {
-        showMapHelp: true
+        showMapHelp: true,
+        displayBookings: [],
+        bookingMarkers: [],
+        retrievalMarkers: [],
+        booking_requests: [],
+        confirmations: [],
+        displayRetrievals: [],
+        hideCard: true,
+        suppressHideCard: false,
+        showRetrievals: null
       }
     },
     methods: {
+        async onPageLoaded() {
+          date.locale(se);
+          await session.create("recycleconsumer@gia.fpx.se", "test");
+        },
         async onShowBookingsTap() {
           const center = await this.map.getCenter();
           this.$store.state.selectedCoordinates = center;
-          this.$navigateTo(Bookings, {
-            props: {
-              showRetrievals: false
-            }
-          });
+
+          if (this.showRetrievals !== false) {
+            await this.showBookings();
+          }
+
+          this.showRetrievals = false;
+          this.hideCard = false;
         },
         async onShowRetrievalsTap() {
           const center = await this.map.getCenter();
           this.$store.state.selectedCoordinates = center;
-          this.$navigateTo(Bookings, {
-            props: {
-              showRetrievals: true
-            }
-          });
+
+          if (this.showRetrievals !== true) {
+            await this.displayConfirmations();
+          }
+
+          this.showRetrievals = true;
+          this.hideCard = false;
         },
         onHelpTap() {
           this.showMapHelp = true;
@@ -91,8 +170,184 @@
             level: 16
           });
         },
+        onCardTap() {
+          if (this.suppressHideCard) {
+            this.suppressHideCard = false;
+          } else {
+            this.hideCard = !this.hideCard;
+          }
+        },
+        async showBookings() {
+          const center = this.$store.state.selectedCoordinates;
+          console.log(center);
+          this.booking_requests = (await collection.fetchItemsByNameAndPropsWithin(config.BOOKING_COLLECTION_NAME, {pantr_status: BookingStatus.WAITING}, {
+            x: center.lng,
+            y: center.lat
+          }, 50000)).map((i) => Booking.from_item(i));
+          this.confirmations = await this.getConfirmations();
+          let bookings = [];
+          const markers = [];
+          for (const booking of this.booking_requests) {
+            let index = this.booking_requests.indexOf(booking);
+            let displayBooking = {}
+            displayBooking.uuid = booking.uuid;
+            displayBooking.selected = this.confirmations.map((c) => c.booking_uuid).includes(booking.uuid);
+            displayBooking.start_formated = date.format(new Date(booking.start), "ddd DD/MM HH:mm");
+            displayBooking.image_src = displayBooking.selected
+                ? `~/assets/images/markers/selected_big_${index + 1}.png`
+                : `~/assets/images/markers/unselected_${index + 1}.png`;
+            
+            let marker = {
+              id: booking.uuid,
+              lat: booking.coordinates[1],
+              lng: booking.coordinates[0],
+              onTap: this.onMarkerTap,
+              iconPath: displayBooking.selected 
+                ? `assets/images/markers/selected_${index + 1}.png`
+                : `assets/images/markers/unselected_${index + 1}.png`,
+            };
+            bookings.push(displayBooking);
+            markers.push(marker);
+          }
+          this.markers = markers;
+          this.map.removeMarkers();
+          this.map.addMarkers(this.markers);
+          this.displayBookings = bookings;
+        },
+        async displayConfirmations() {
+          const confirmations = await this.getConfirmations();
+          const displayConfs = [];
+          const markers = [];
+
+          for (const c of confirmations) {
+            const item = await collection.fetchItem(c.booking_uuid);
+            const index = confirmations.indexOf(c);
+            
+            displayConfs.push({
+              booking: item,
+              collected: false,
+              start_formatted: date.format(new Date(item.properties.pantr_start), "ddd HH:mm"),
+              image_src: "~/assets/images/markers/selected_big_" + (index + 1) + ".png"
+            });
+            
+            markers.push({
+              id: item.uuid,
+              lat: item.geometry.coordinates[1],
+              lng: item.geometry.coordinates[0],
+              iconPath: `assets/images/markers/selected_${index + 1}.png`
+            });
+          }
+
+          this.displayRetrievals = displayConfs;
+          this.markers = markers;
+          this.map.removeMarkers();
+          this.map.addMarkers(this.markers);
+        },
+        async onRetrievedTap(item) {
+          this.suppressHideCard = true;
+          console.log("onRetrievedTap " + JSON.stringify(item));
+          item.collected = true;
+          item.booking.properties.pantr_status = BookingStatus.DONE;
+          await collection.updateItem(item.booking);
+        },
+        onLabelLoaded(args) {
+          if (isAndroid) {
+            args.object.nativeView.setGravity(17)
+          }
+        },
+        sleep(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        },
         async onMapReady(args) {
           this.map = args.map;
+          await this.sleep(1000);
+          /*const center = this.map.getCenter();
+          await this.map.setCenter({
+            lat: center.lat,
+            lng: center.lng,
+            animated: true
+          });*/
+
+          await this.map.setZoomLevel({
+            level: 16
+          });
+        },
+        onItemTap({ item: displayBooking }) {
+          this.toggleBooking(displayBooking.uuid)
+        },
+
+        onMarkerTap(marker) {
+          this.toggleBooking(marker.id);
+        },
+
+        toggleBooking(id) {
+          const booking = this.displayBookings.find((b) => b.uuid === id);
+          const marker = this.markers.find((m) => m.id === id);
+          const index = this.displayBookings.indexOf(booking);
+          booking.selected = !booking.selected
+          booking.image_src = booking.selected
+                ? `~/assets/images/markers/selected_big_${index + 1}.png`
+                : `~/assets/images/markers/unselected_${index + 1}.png`;
+          marker.iconPath = booking.selected
+            ? `assets/images/markers/selected_${index + 1}.png`
+            : `assets/images/markers/unselected_${index + 1}.png`;
+            
+          this.map.removeMarkers([marker.id]);
+          this.map.addMarkers([marker]);
+        },
+
+        async onCollectTap() {
+            this.suppressHideCard = true;
+            let selectedBookingUuids = this.displayBookings.filter((b) => b.selected).map((b) => b.uuid);
+            this.displayBookings = this.displayBookings.filter((b) => !selectedBookingUuids.includes(b.uuid));
+            this.map.removeMarkers(selectedBookingUuids);
+            selectedBookingUuids = selectedBookingUuids.filter((uuid) => !this.confirmations.map((c) => c.booking_uuid).includes(uuid));
+            const selectedBookings = this.booking_requests.filter((b) => selectedBookingUuids.includes(b.uuid))
+            let confirmations = selectedBookings.map((b) =>  {
+              const confirmation = new Confirmation();
+              confirmation.coordinates = b.coordinates;
+              confirmation.booking_uuid = b.uuid;
+              confirmation.retriever_uuid = RETRIEVER_UUID;
+              return confirmation;
+            });
+
+            console.log("fetching collections by name");
+            const collections = await collection.fetchCollections();
+            console.log("collections: " + JSON.stringify(collections));
+
+            let confirmationCollection = collections.find(c => c.name === config.CONFIRMATION_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
+            console.log("confirmationCollection: " + JSON.stringify(confirmationCollection));
+
+            if (confirmationCollection == null) {
+              console.log("creating new collection");
+              confirmationCollection = await collection.create(config.CONFIRMATION_COLLECTION_NAME, false);
+              console.log("created collection: " + JSON.stringify(confirmationCollection));
+            }
+
+            console.log("adding confirmations to collection");
+            console.log("RETRIEVER_UUID", RETRIEVER_UUID);
+            for(let confirmation of confirmations) {
+              console.log("confirmation:" + JSON.stringify(confirmation.to_item()))
+              this.confirmations.push(confirmation);
+              await collection.createItem(confirmationCollection.uuid, confirmation.to_item());
+            }
+        },
+
+        async getConfirmations() {
+          const confirmed_bookings = (await collection.fetchItemsByNameAndProps(config.BOOKING_COLLECTION_NAME, {pantr_status: BookingStatus.CONFIRMED, pantr_retriever_uuid: RETRIEVER_UUID})).map((i) => Booking.from_item(i))
+          console.log("Confimed bookings: ", JSON.stringify(confirmed_bookings));
+          console.log("fetching collections by name");
+          const collections = await collection.fetchCollections();
+          console.log("collections: " + JSON.stringify(collections));
+
+          let confirmationCollection = collections.find(c => c.name === config.CONFIRMATION_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
+          console.log("confirmationCollection: " + JSON.stringify(confirmationCollection));
+          let confirmations = [];
+          if (confirmationCollection != null) {
+            confirmations = (await collection.fetchItems(confirmationCollection.uuid)).map((i) => Confirmation.from_item(i))
+            confirmations = confirmations.filter((c) => confirmed_bookings.map((cb) => cb.uuid).includes(c.booking_uuid))
+          }
+          return confirmations;
         }
       }
     }

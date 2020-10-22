@@ -8,7 +8,6 @@ if(!retriever_uuid) {
 
 import App from './components/App'
 import Intro from './components/Intro'
-import Bookings from './components/Bookings'
 import VueDevtools from 'nativescript-vue-devtools'
 import RadListView from 'nativescript-ui-listview/vue';
 
