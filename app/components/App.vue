@@ -91,14 +91,9 @@
 <script>
   import date from 'date-and-time';
   import se from 'date-and-time/locale/se';
-  import collection from '../services/collection'
   import session from '../services/session'
-  import config from "../config";
-  import {Booking, Confirmation, BookingStatus} from "../models";
   import {isAndroid} from 'tns-core-modules/platform';
-
-  const appSettings = require("tns-core-modules/application-settings");
-  const RETRIEVER_UUID = appSettings.getString("retriever_uuid")
+  import bookingService from '../services/booking'; 
 
   export default {
     data() {
@@ -180,11 +175,8 @@
         async showBookings() {
           const center = this.$store.state.selectedCoordinates;
           console.log(center);
-          this.booking_requests = (await collection.fetchItemsByNameAndPropsWithin(config.BOOKING_COLLECTION_NAME, {pantr_status: BookingStatus.WAITING}, {
-            x: center.lng,
-            y: center.lat
-          }, 50000)).map((i) => Booking.from_item(i));
-          this.confirmations = await this.getConfirmations();
+          this.booking_requests = await bookingService.findBookingsInArea(center.lat, center.lng);
+          this.confirmations = await bookingService.getConfirmations();
           let bookings = [];
           const markers = [];
           for (const booking of this.booking_requests) {
@@ -215,25 +207,25 @@
           this.displayBookings = bookings;
         },
         async displayConfirmations() {
-          const confirmations = await this.getConfirmations();
+          const confirmations = await bookingService.getConfirmations();
           const displayConfs = [];
           const markers = [];
 
           for (const c of confirmations) {
-            const item = await collection.fetchItem(c.booking_uuid);
+            const booking = await bookingService.getBookingFromConfirmation(c);
             const index = confirmations.indexOf(c);
             
             displayConfs.push({
-              booking: item,
+              booking: booking,
               collected: false,
-              start_formatted: date.format(new Date(item.properties.pantr_start), "ddd HH:mm"),
+              start_formatted: date.format(new Date(booking.start), "ddd HH:mm"),
               image_src: "~/assets/images/markers/selected_big_" + (index + 1) + ".png"
             });
             
             markers.push({
-              id: item.uuid,
-              lat: item.geometry.coordinates[1],
-              lng: item.geometry.coordinates[0],
+              id: booking.uuid,
+              lat: booking.coordinates[1],
+              lng: booking.coordinates[0],
               iconPath: `assets/images/markers/selected_${index + 1}.png`
             });
           }
@@ -247,8 +239,7 @@
           this.suppressHideCard = true;
           console.log("onRetrievedTap " + JSON.stringify(item));
           item.collected = true;
-          item.booking.properties.pantr_status = BookingStatus.DONE;
-          await collection.updateItem(item.booking);
+          await bookingService.pickUpBooking(item.booking);
         },
         onLabelLoaded(args) {
           if (isAndroid) {
@@ -303,51 +294,7 @@
             this.map.removeMarkers(selectedBookingUuids);
             selectedBookingUuids = selectedBookingUuids.filter((uuid) => !this.confirmations.map((c) => c.booking_uuid).includes(uuid));
             const selectedBookings = this.booking_requests.filter((b) => selectedBookingUuids.includes(b.uuid))
-            let confirmations = selectedBookings.map((b) =>  {
-              const confirmation = new Confirmation();
-              confirmation.coordinates = b.coordinates;
-              confirmation.booking_uuid = b.uuid;
-              confirmation.retriever_uuid = RETRIEVER_UUID;
-              return confirmation;
-            });
-
-            console.log("fetching collections by name");
-            const collections = await collection.fetchCollections();
-            console.log("collections: " + JSON.stringify(collections));
-
-            let confirmationCollection = collections.find(c => c.name === config.CONFIRMATION_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
-            console.log("confirmationCollection: " + JSON.stringify(confirmationCollection));
-
-            if (confirmationCollection == null) {
-              console.log("creating new collection");
-              confirmationCollection = await collection.create(config.CONFIRMATION_COLLECTION_NAME, false);
-              console.log("created collection: " + JSON.stringify(confirmationCollection));
-            }
-
-            console.log("adding confirmations to collection");
-            console.log("RETRIEVER_UUID", RETRIEVER_UUID);
-            for(let confirmation of confirmations) {
-              console.log("confirmation:" + JSON.stringify(confirmation.to_item()))
-              this.confirmations.push(confirmation);
-              await collection.createItem(confirmationCollection.uuid, confirmation.to_item());
-            }
-        },
-
-        async getConfirmations() {
-          const confirmed_bookings = (await collection.fetchItemsByNameAndProps(config.BOOKING_COLLECTION_NAME, {pantr_status: BookingStatus.CONFIRMED, pantr_retriever_uuid: RETRIEVER_UUID})).map((i) => Booking.from_item(i))
-          console.log("Confimed bookings: ", JSON.stringify(confirmed_bookings));
-          console.log("fetching collections by name");
-          const collections = await collection.fetchCollections();
-          console.log("collections: " + JSON.stringify(collections));
-
-          let confirmationCollection = collections.find(c => c.name === config.CONFIRMATION_COLLECTION_NAME && c.provider_uuid === session.user.provider_uuid);
-          console.log("confirmationCollection: " + JSON.stringify(confirmationCollection));
-          let confirmations = [];
-          if (confirmationCollection != null) {
-            confirmations = (await collection.fetchItems(confirmationCollection.uuid)).map((i) => Confirmation.from_item(i))
-            confirmations = confirmations.filter((c) => confirmed_bookings.map((cb) => cb.uuid).includes(c.booking_uuid))
-          }
-          return confirmations;
+            this.confirmations = await bookingService.confirmBookings(selectedBookings);
         }
       }
     }
