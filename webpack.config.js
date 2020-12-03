@@ -283,7 +283,7 @@ module.exports = env => {
                 "global.TNS_WEBPACK": "true",
                 "TNS_ENV": JSON.stringify(mode),
                 "process": "global.process",
-                "SERVICE_URL": JSON.stringify("http://dev.gia.fpx.se/api/v1"),
+                "SERVICE_URL": JSON.stringify("http://api.fpx.se/api/v1"),
                 "RETRIEVER_COLLECTION_NAME": JSON.stringify("pantr-retriever"),
                 "BOOKING_COLLECTION_NAME": JSON.stringify("pantr-booking"),
                 "CONFIRMATION_COLLECTION_NAME": JSON.stringify("pantr-confirmation"),
